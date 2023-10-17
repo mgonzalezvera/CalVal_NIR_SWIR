@@ -23,6 +23,7 @@ files_rad = sorted(glob.glob(path+'Rad/Temp1/Lcal/Images/*.mat'))
 data_rad = mat73.loadmat(files_rad[0])
 data_rad = data_rad['salida']
 
+
 average_image = np.mean(data_rad['imagen'], axis=2)
 x = np.linspace(0,np.shape(data_rad['imagen'])[1],np.shape(data_rad['imagen'])[1])
 line = average_image[np.shape(data_rad['imagen'])[0]//2,:] - average_image_dark[np.shape(data_rad['imagen'])[0]//2,:]
