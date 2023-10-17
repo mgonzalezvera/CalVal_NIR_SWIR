@@ -18,7 +18,6 @@ files_darks = sorted(glob.glob(path+'Darks/Temp1/*'))
 data_dark = mat73.loadmat(files_darks[0])
 data_dark = data_dark['salida']
 average_image_dark = np.mean(data_dark['imagen'], axis=2)
-
 #
 files_rad = sorted(glob.glob(path+'Rad/Temp1/Lcal/Images/*.mat'))
 data_rad = mat73.loadmat(files_rad[0])
