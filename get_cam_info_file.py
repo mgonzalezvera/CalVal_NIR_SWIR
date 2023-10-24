@@ -151,7 +151,7 @@ bandas = {
                 }
 xlims =  {'x1': 158,'x2':1122 }
 for key in bandas.keys():
-    plot_rect_bands(xlims['x1'],xlims['x2'],bandas[key]['y1'],bandas[key]['y2'],key,bandas[key]['color'],ax)
+    plot_rect_bands(xlims['x1']-1,xlims['x2']-1,bandas[key]['y1']-1,bandas[key]['y2']-1,key,bandas[key]['color']-1,ax)
 ###################################################################################
 # ----------------------------------------------------------------------------------------------------------------------
 # HISTOGRAMA

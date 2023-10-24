@@ -12,11 +12,12 @@ plt.style.use(['science'])
 plt.rcParams['text.usetex'] = True
 
 path = '/home/usuario/Documentos/MISION/CalVal/20230918_NirSwir_INVAP/' #path CONAE
-path = '/media/maxpower/Mauro/SABIA-mar/20230918_NirSwir_INVAP/' #path CASA
+# path = '/media/maxpower/Mauro/SABIA-mar/20230918_NirSwir_INVAP/' #path CASA
 
 # --------------------------------------------------------------------------------------------------------------------
 # DARKS
 files_darks = sorted(glob.glob(path+'Darks/Temp1/*'))
+files_darks = sorted(glob.glob(path+'Rad/Temp2/Ltyp/Images/*'))
 data_dark = mat73.loadmat(files_darks[0])
 # ..........................
 # TIEMPOS DE INTEGRACION
@@ -151,7 +152,7 @@ def cold_points():
     vmin = 60  # Valor mínimo personalizado
     vmax = 180  # Valor máximo personalizado
     cmap = plt.get_cmap('viridis')
-    THRESHOLD = 30
+    THRESHOLD = 22
     fig, axs = plt.subplots(3,3)
     for i in range(0,9):
         row = i // 3
@@ -234,9 +235,7 @@ def cold_points():
     cbar = plt.colorbar(im, cax=cax)
     cbar.set_label('DN')
     plt.show()
-
+# ----------------------------------------------------------------------------------------------------------------------
 cold_points()
 # outlier_analysis()
-# imagen con puntos frios individual
-
 
