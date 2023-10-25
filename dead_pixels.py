@@ -53,14 +53,30 @@ def plot_rect_bands(x1,x2,y1,y2,band,color,ax):
     rect = patches.Rectangle((x1, y2), x2 - x1, y1 - y2, linewidth=1, edgecolor=color, facecolor='none')
     ax.add_patch(rect)
     ax.text(x1 - 60, (y1 + y2) / 2, band, color=color, fontsize=12)
+
+def dividir_lista_creciente(lista):
+    segmentos = []
+    segmento_actual = [lista[0]]
+
+    for i in range(1, len(lista)):
+        if lista[i] > lista[i - 1]:
+            segmento_actual.append(lista[i])
+        else:
+            segmentos.append(segmento_actual)
+            segmento_actual = [lista[i]]
+
+    segmentos.append(segmento_actual)
+
+    return segmentos
+
 # --------------------------------------------------------------------------------------------------------------------
 
 sns.light_palette("seagreen", as_cmap=True)
 plt.style.use(['science'])
 plt.rcParams['text.usetex'] = True
 
-path = '/home/usuario/Documentos/MISION/CalVal/20230918_NirSwir_INVAP/' #path CONAE
-# path = '/media/maxpower/Mauro/SABIA-mar/20230918_NirSwir_INVAP/' #path CASA
+# path = '/home/usuario/Documentos/MISION/CalVal/20230918_NirSwir_INVAP/' #path CONAE
+path = '/media/maxpower/Mauro/SABIA-mar/20230918_NirSwir_INVAP/' #path CASA
 
 # --------------------------------------------------------------------------------------------------------------------
 folders = [
@@ -114,7 +130,7 @@ def  dead_pixel_all():
         ax.set_title("Dead Pixels - {}".format(folder))
         ax.axis('off')
         sufix = encontrar_y_cortar_string(folder)
-        name_save = '/home/usuario/Documentos/MISION/CalVal/arrays/'+sufix
+        name_save = './arrays/'+sufix
         if folder[:3] == 'Rad':
             name_save = name_save + '_' + folder[10:14]
         print('Saving array in: ',name_save)
@@ -124,7 +140,7 @@ def  dead_pixel_all():
 
 def compare_dead_pixels():
     matrices = []
-    path_file = '/home/usuario/Documentos/MISION/CalVal/arrays/*.npy'
+    path_file = './arrays/*.npy'
     files = sorted(glob.glob(path_file))
     for file in files:
         matriz = cargar_matrices_conteo(file)
@@ -185,7 +201,7 @@ def compare_dead_pixels():
         ax.text(x2 + 5, y2 + 5, f'True: {conteo_true}', color=rectangulo['color'], fontsize=15)
 
     # GUARDAR CAPA
-    np.save('/home/usuario/Documentos/MISION/CalVal/arrays/dead_pixels_mask.npy', pixeles_muertos_comunes)    # Muestra la gráfica
+    np.save('./arrays/dead_pixels_mask.npy', pixeles_muertos_comunes)    # Muestra la gráfica
     plt.show()
 
 def find_coordinates_with_value_gt_zero(matrix_file, output_file):
@@ -227,22 +243,34 @@ def variacion_coordenadas(path,folder, coords):
         # if data['tiemposInt'] >= 180:
         #     break
     pixel_values = np.array(pixel_values)
+    print(pixel_values.T.shape)
+    print(pixel_values.T)
     timestamps = [float(timestamp) for timestamp in timestamps]
-    print(timestamps)
+    timestamps = dividir_lista_creciente(timestamps)
+    # print(timestamps)
     fig = None
-    for i, pixel_value in enumerate(pixel_values.T):
+    print(timestamps[0])
+    print(len(timestamps[0]))
+    print('Mean')
+    print(mean_values)
+    for i, pixel_value in enumerate(pixel_values[:len(timestamps[0])].T):
         # plt.plot(timestamps, pixel_value, label=f'Pixel {i}')
 
         if fig is None:
-            fig = px.line(x=timestamps, y=pixel_value, labels={'x': 'Tiempo', 'y': 'Valor del Píxel'},
-                          title='Evolución de Valores de Píxeles')
+            fig = px.line(x=timestamps[0], y=pixel_value, labels={'x': 'Tiempo', 'y': 'Valor del Píxel'},
+                          title='Evolución de Valores de Píxeles - {}'.format(folder))
         else:
             # Agrega las nuevas trazas a la figura existente
-            fig.add_scatter(x=timestamps, y=pixel_value, name=f'Pixel {i}')
+            fig.add_scatter(x=timestamps[0], y=pixel_value, name=f'Pixel {i}')
 
-    fig.add_trace(go.Scatter(x=timestamps,
-                             y=mean_values ,
-                             name='Media ± Desviación Estándar'))
+    # fig.add_trace(go.Scatter(x=timestamps[0],
+    #                          y=mean_values ,
+    #                          name='Media ± Desviación Estándar'))
+
+    fig.add_trace(go.Scatter(x=timestamps[0], y=mean_values, name='Media'))
+
+    fig.add_trace(go.Scatter(x=timestamps[0], y=np.array(mean_values) + std_values, fill='tonexty', mode='none', fillcolor='rgba(0,100,80,0.2)', line=dict(width=0), name=f'Dispersión {i}'))
+    fig.add_trace(go.Scatter(x=timestamps[0], y=np.array(mean_values) - std_values, fill='tonexty', mode='none', fillcolor='rgba(0,100,80,0.2)', line=dict(width=0), name=f'Dispersión {i}'))
 
     fig.update_xaxes(tickangle=45)
     fig.show()
@@ -250,13 +278,22 @@ def variacion_coordenadas(path,folder, coords):
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 # dead_pixel_all()
-# compare_dead_pixels()
-coords = '/home/usuario/Documentos/MISION/CalVal/arrays/coordenadas_dead_pixels.csv'
-variacion_coordenadas(path,folders[0],coords)
-# matrix_file = '/home/usuario/Documentos/MISION/CalVal/arrays/dead_pixels_mask.npy'  # Reemplaza con la ruta de tu archivo .npy
-# output_file = '/home/usuario/Documentos/MISION/CalVal/arrays/coordenadas_dead_pixels.csv'  # Nombre del archivo de salida
-# find_coordinates_with_value_gt_zero(matrix_file, output_file)
 #
+# compare_dead_pixels()
+
+
+
+# matrix_file = './arrays/dead_pixels_mask.npy'  # Reemplaza con la ruta de tu archivo .npy
+# output_file = './arrays/coordenadas_dead_pixels.csv'  # Nombre del archivo de salida
+# find_coordinates_with_value_gt_zero(matrix_file, output_file)
+
+#
+coords = './arrays/coordenadas_dead_pixels.csv'
+for i,folder in enumerate(folders):
+    variacion_coordenadas(path,folders[i],coords)
+
+# variacion_coordenadas(path,folders[1],coords)
+
 # folders = [
 #     'Darks/Temp1/',
 #     'Darks/Temp2/',
