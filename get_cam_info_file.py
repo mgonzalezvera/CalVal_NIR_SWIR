@@ -33,6 +33,7 @@ folders = [
 # --------------------------------------------------------------------------------------------------------------------
 # DARKS
 files_darks = sorted(glob.glob(path+'Darks/Temp1/*'))
+files_darks = sorted(glob.glob(path+'Darks/Temp1/*'))
 data_dark = mat73.loadmat(files_darks[0])
 # ..........................
 # TIEMPOS DE INTEGRACION
@@ -178,8 +179,6 @@ plt.show()
 #
 
 
-# for key in data_1.keys():
-#     print(key, data_1[key])
-#
+
 # for value in data_2['inforesult']:
 #     print(value)

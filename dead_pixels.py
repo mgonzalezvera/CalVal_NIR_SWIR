@@ -75,8 +75,8 @@ sns.light_palette("seagreen", as_cmap=True)
 plt.style.use(['science'])
 plt.rcParams['text.usetex'] = True
 
-# path = '/home/usuario/Documentos/MISION/CalVal/20230918_NirSwir_INVAP/' #path CONAE
-path = '/media/maxpower/Mauro/SABIA-mar/20230918_NirSwir_INVAP/' #path CASA
+path = '/home/usuario/Documentos/MISION/CalVal/20230918_NirSwir_INVAP/' #path CONAE
+# path = '/media/maxpower/Mauro/SABIA-mar/20230918_NirSwir_INVAP/' #path CASA
 
 # --------------------------------------------------------------------------------------------------------------------
 folders = [
@@ -231,28 +231,39 @@ def variacion_coordenadas(path,folder, coords):
     timestamps = []
     mean_values = []
     std_values = []
+    # ----------------------------------------------------------
+    # cuadros por fuera de los filtros y de superficies de referencia
+    cuadro_1 = (75, 1200, 66, 361)
+    cuadro_2 = (26, 1256, 663, 955)
+    x1_1, x2_1, y1_1, y2_1 = cuadro_1
+    x1_2, x2_2, y1_2, y2_2 = cuadro_2
+
+    # ----------------------------------------------------------
     for file in files:
         data = mat73.loadmat(file)['salida']
         df = np.mean(data['imagen'], axis=2)
-        mean_values.append(np.mean(df))
-        std_values.append(np.std(df))
+        subimagen_1 = df[y1_1:y2_1, x1_1:x2_1]
+        subimagen_2 = df[y1_2:y2_2, x1_2:x2_2]
+        media_cuadro_1 = np.mean(subimagen_1)
+        media_cuadro_2 = np.mean(subimagen_2)
+        mean_values.append(np.mean([media_cuadro_1,media_cuadro_2]))
+        std_values.append(np.std([media_cuadro_1,media_cuadro_2]))
         pixel_values_in_image = [df[x, y] for x, y in coordinates]
-
         pixel_values.append(pixel_values_in_image)
         timestamps.append(data['tiemposInt'])
         # if data['tiemposInt'] >= 180:
         #     break
     pixel_values = np.array(pixel_values)
-    print(pixel_values.T.shape)
-    print(pixel_values.T)
+    # print(pixel_values.T.shape)
+    # print(pixel_values.T)
     timestamps = [float(timestamp) for timestamp in timestamps]
     timestamps = dividir_lista_creciente(timestamps)
     # print(timestamps)
     fig = None
-    print(timestamps[0])
-    print(len(timestamps[0]))
-    print('Mean')
-    print(mean_values)
+    # print(timestamps[0])
+    # print(len(timestamps[0]))
+    # print('Mean')
+    # print(mean_values)
     for i, pixel_value in enumerate(pixel_values[:len(timestamps[0])].T):
         # plt.plot(timestamps, pixel_value, label=f'Pixel {i}')
 
