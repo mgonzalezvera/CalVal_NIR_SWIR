@@ -11,14 +11,14 @@ sns.light_palette("seagreen", as_cmap=True)
 plt.style.use(['science'])
 plt.rcParams['text.usetex'] = True
 
-path = '/home/usuario/Documentos/MISION/CalVal/20230918_NirSwir_INVAP/' #path CONAE
-# path = '/media/maxpower/Mauro/SABIA-mar/20230918_NirSwir_INVAP/' #path CASA
+# path = '/home/usuario/Documentos/MISION/CalVal/20230918_NirSwir_INVAP/' #path CONAE
+path = '/media/maxpower/Mauro/SABIA-mar/20230918_NirSwir_INVAP/' #path CASA
 
 # --------------------------------------------------------------------------------------------------------------------
 # DARKS
-# files_darks = sorted(glob.glob(path+'Darks/Temp1/*'))
-files_darks = sorted(glob.glob(path+'Rad/Temp2/Lmax/Images/*'))
-files_darks = sorted(glob.glob(path+'Rad/Temp2/Lmax/Images/*'))
+files_darks = sorted(glob.glob(path+'Darks/Temp1/*'))
+# files_darks = sorted(glob.glob(path+'Rad/Temp2/Lmax/Images/*'))
+# files_darks = sorted(glob.glob(path+'Rad/Temp2/Lmax/Images/*'))
 data_dark = mat73.loadmat(files_darks[0])
 # ..........................
 # TIEMPOS DE INTEGRACION
@@ -30,22 +30,25 @@ data_dark = mat73.loadmat(files_darks[0])
 # ----------------------------------------------------------------------------------------------------------------------
 # OUTLIERS ANALYSIS
 def outlier_analysis():
-    vmin = 60  # Valor mínimo personalizado
-    vmax = 180  # Valor máximo personalizado
+    vmin = 0 # Valor mínimo personalizado
+    vmax = 300  # Valor máximo personalizado
     cmap = plt.get_cmap('viridis')
     UMBRAL = True
-    THRESHOLD = 1000
+    # THRESHOLD = 1000
+    THRESHOLD = 0.05 #porcentaje de la media
     fig, axs = plt.subplots(3,3)
     for i in range(0,9):
         row = i // 3
         col = i % 3
-        df = np.mean(mat73.loadmat(files_darks[i])['salida']['imagen'],axis=2)
+        time_integ = mat73.loadmat(files_darks[i])['salida']['tiemposInt']
+        df = np.mean(mat73.loadmat(files_darks[i])['salida']['imagen'],axis=2)/ time_integ
         im = axs[row,col].imshow(df, cmap=cmap, vmin=vmin, vmax=vmax)
         axs[row, col].set_title('T_int = {} ms'.format(mat73.loadmat(files_darks[i])['salida']['tiemposInt']))
         if UMBRAL:
             cont_outlier = 0
             edges = sobel(df)
             threshold = THRESHOLD  # Ajusta este valor según tus necesidades
+            threshold = THRESHOLD * np.mean(df)
             outliers = edges > threshold
             for y, x in zip(*np.where(outliers)):
                 axs[row, col].add_patch(plt.Circle((x, y), radius=5, color='red', fill=False))
@@ -63,13 +66,15 @@ def outlier_analysis():
     for i in range(0,9):
         row = i // 3
         col = i % 3
-        df = np.mean(mat73.loadmat(files_darks[i+9])['salida']['imagen'],axis=2)
+        time_integ = mat73.loadmat(files_darks[i+9])['salida']['tiemposInt']
+        df = np.mean(mat73.loadmat(files_darks[i+9])['salida']['imagen'], axis=2) / time_integ
         im = axs[row,col].imshow(df, cmap=cmap, vmin=vmin, vmax=vmax)
         axs[row, col].set_title('T_int = {} ms'.format(mat73.loadmat(files_darks[i+9])['salida']['tiemposInt']))
         if UMBRAL:
             cont_outlier = 0
             edges = sobel(df)
             threshold = THRESHOLD  # Ajusta este valor según tus necesidades
+            threshold = THRESHOLD * np.mean(df)
             outliers = edges > threshold
             for y, x in zip(*np.where(outliers)):
                 axs[row, col].add_patch(plt.Circle((x, y), radius=5, color='red', fill=False))
@@ -84,13 +89,15 @@ def outlier_analysis():
     for i in range(0,9):
         row = i // 3
         col = i % 3
-        df = np.mean(mat73.loadmat(files_darks[i+18])['salida']['imagen'],axis=2)
+        time_integ = mat73.loadmat(files_darks[i+18])['salida']['tiemposInt']
+        df = np.mean(mat73.loadmat(files_darks[i+18])['salida']['imagen'], axis=2) / time_integ
         im = axs[row,col].imshow(df, cmap=cmap, vmin=vmin, vmax=vmax)
         axs[row, col].set_title('T_int = {} ms'.format(mat73.loadmat(files_darks[i+18])['salida']['tiemposInt']))
         if UMBRAL:
             cont_outlier = 0
             edges = sobel(df)
             threshold = THRESHOLD  # Ajusta este valor según tus necesidades
+            threshold = THRESHOLD * np.mean(df)
             outliers = edges > threshold
             for y, x in zip(*np.where(outliers)):
                 axs[row, col].add_patch(plt.Circle((x, y), radius=5, color='red', fill=False))
@@ -107,13 +114,15 @@ def outlier_analysis():
     for i in range(0,9):
         row = i // 3
         col = i % 3
-        df = np.mean(mat73.loadmat(files_darks[i+27])['salida']['imagen'],axis=2)
+        time_integ = mat73.loadmat(files_darks[i+27])['salida']['tiemposInt']
+        df = np.mean(mat73.loadmat(files_darks[i+27])['salida']['imagen'], axis=2) / time_integ
         im = axs[row,col].imshow(df, cmap=cmap, vmin=vmin, vmax=vmax)
         axs[row, col].set_title('T_int = {} ms'.format(mat73.loadmat(files_darks[i+27])['salida']['tiemposInt']))
         if UMBRAL:
             cont_outlier = 0
             edges = sobel(df)
             threshold = THRESHOLD  # Ajusta este valor según tus necesidades
+            threshold = THRESHOLD * np.mean(df)
             outliers = edges > threshold
             for y, x in zip(*np.where(outliers)):
                 axs[row, col].add_patch(plt.Circle((x, y), radius=5, color='red', fill=False))
@@ -131,13 +140,17 @@ def outlier_analysis():
     for i in range(0,9):
         row = i // 3
         col = i % 3
-        df = np.mean(mat73.loadmat(files_darks[i+36])['salida']['imagen'],axis=2)
+
+        # time_integ = mat73.loadmat(files_darks[i+36])['salida']['tiemposInt']
+        time_integ = 1
+        df = np.mean(mat73.loadmat(files_darks[i+36])['salida']['imagen'], axis=2) / time_integ
         im = axs[row,col].imshow(df, cmap=cmap, vmin=vmin, vmax=vmax)
         axs[row, col].set_title('T_int = {} ms'.format(mat73.loadmat(files_darks[i+36])['salida']['tiemposInt']))
         if UMBRAL:
             cont_outlier = 0
             edges = sobel(df)
             threshold = THRESHOLD  # Ajusta este valor según tus necesidades
+            threshold = THRESHOLD * np.mean(df)
             outliers = edges > threshold
             for y, x in zip(*np.where(outliers)):
                 axs[row, col].add_patch(plt.Circle((x, y), radius=5, color='red', fill=False))
@@ -152,6 +165,8 @@ def outlier_analysis():
 def cold_points():
     vmin = 60  # Valor mínimo personalizado
     vmax = 180  # Valor máximo personalizado
+    # vmin = 120  # Valor mínimo personalizado
+    # vmax = 130  # Valor máximo personalizado
     cmap = plt.get_cmap('viridis')
     THRESHOLD = 22
     fig, axs = plt.subplots(3,3)
@@ -237,29 +252,10 @@ def cold_points():
     cbar.set_label('DN')
     plt.show()
 #
-def plot_only_one(file):
-    vmin = 60  # Valor mínimo personalizado
-    vmax = 180  # Valor máximo personalizado
-    cmap = plt.get_cmap('viridis')
-    THRESHOLD = 22
-    fig, axs = plt.subplots()
-    df = np.mean(mat73.loadmat(file)['salida']['imagen'], axis=2)
-    im = axs.imshow(df, cmap=cmap, vmin=vmin, vmax=vmax)
-    axs.set_title('T_int = {} ms'.format(mat73.loadmat(file)['salida']['tiemposInt']))
-    coords = np.argwhere(df < THRESHOLD)
-    x_coords = coords[:, 1]
-    y_coords = coords[:, 0]
-    axs.plot(x_coords, y_coords, 'ro', markersize=2)
-    axs.annotate(f'Cold Points: {len(x_coords)}', xy=(1, 1), xycoords='axes fraction', xytext=(-10, -10),
-                           textcoords='offset points', color='blue', fontsize=20, ha='right', va='top')
-    cax = fig.add_axes([0.91, 0.15, 0.02, 0.7])
-    cbar = plt.colorbar(im, cax=cax)
-    cbar.set_label('DN')
-    plt.show()
+
 # ----------------------------------------------------------------------------------------------------------------------
-cold_points()
-# outlier_analysis()
-# file ='/home/usuario/Documentos/MISION/CalVal/20230918_NirSwir_INVAP/Rad/Temp1/Ltyp/Images/rad_temp1_01000_20230919170149.400.mat'
-# plot_only_one(file)
+# cold_points()
+outlier_analysis()
+
 
 

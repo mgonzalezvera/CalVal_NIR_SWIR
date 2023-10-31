@@ -75,8 +75,8 @@ sns.light_palette("seagreen", as_cmap=True)
 plt.style.use(['science'])
 plt.rcParams['text.usetex'] = True
 
-path = '/home/usuario/Documentos/MISION/CalVal/20230918_NirSwir_INVAP/' #path CONAE
-# path = '/media/maxpower/Mauro/SABIA-mar/20230918_NirSwir_INVAP/' #path CASA
+# path = '/home/usuario/Documentos/MISION/CalVal/20230918_NirSwir_INVAP/' #path CONAE
+path = '/media/maxpower/Mauro/SABIA-mar/20230918_NirSwir_INVAP/' #path CASA
 
 # --------------------------------------------------------------------------------------------------------------------
 folders = [
@@ -86,6 +86,9 @@ folders = [
     'Rad/Temp1/Ltyp/Images/',
     'Rad/Temp2/Lmax/Images/',
     'Rad/Temp2/Ltyp/Images/'
+]
+folders = [
+    'Darks/Temp2/',
 ]
 
 def  dead_pixel_all():
@@ -265,31 +268,47 @@ def variacion_coordenadas(path,folder, coords):
     # print('Mean')
     # print(mean_values)
     for i, pixel_value in enumerate(pixel_values[:len(timestamps[0])].T):
-        # plt.plot(timestamps, pixel_value, label=f'Pixel {i}')
+        plt.plot(timestamps[0], pixel_value, label=f'Pixel {i}')
+        # plt.show()
 
-        if fig is None:
-            fig = px.line(x=timestamps[0], y=pixel_value, labels={'x': 'Tiempo', 'y': 'Valor del Píxel'},
-                          title='Evolución de Valores de Píxeles - {}'.format(folder))
-        else:
-            # Agrega las nuevas trazas a la figura existente
-            fig.add_scatter(x=timestamps[0], y=pixel_value, name=f'Pixel {i}')
+        # if fig is None:
+        #     fig = px.line(x=timestamps[0], y=pixel_value, labels={'x': 'Tiempo', 'y': 'Valor del Píxel'},
+        #                   title='Evolución de Valores de Píxeles - {}'.format(folder))
+        # else:
+        #     # Agrega las nuevas trazas a la figura existente
+        #     fig.add_scatter(x=timestamps[0], y=pixel_value, name=f'Pixel {i}')
 
     # fig.add_trace(go.Scatter(x=timestamps[0],
     #                          y=mean_values ,
     #                          name='Media ± Desviación Estándar'))
 
-    fig.add_trace(go.Scatter(x=timestamps[0], y=mean_values, name='Media'))
+    # fig.add_trace(go.Scatter(x=timestamps[0], y=mean_values, name='Media'))
+    #
+    # fig.add_trace(go.Scatter(x=timestamps[0], y=np.array(mean_values) + std_values, fill='tonexty', mode='none', fillcolor='rgba(0,100,80,0.2)', line=dict(width=0), name=f'Dispersión {i}'))
+    # fig.add_trace(go.Scatter(x=timestamps[0], y=np.array(mean_values) - std_values, fill='tonexty', mode='none', fillcolor='rgba(0,100,80,0.2)', line=dict(width=0), name=f'Dispersión {i}'))
+    #
+    # fig.update_xaxes(tickangle=45)
+    # fig.show()
+    mean_values = np.array(mean_values)[:len(timestamps[0])]
+    std_values = np.array(std_values)[:len(timestamps[0])]
 
-    fig.add_trace(go.Scatter(x=timestamps[0], y=np.array(mean_values) + std_values, fill='tonexty', mode='none', fillcolor='rgba(0,100,80,0.2)', line=dict(width=0), name=f'Dispersión {i}'))
-    fig.add_trace(go.Scatter(x=timestamps[0], y=np.array(mean_values) - std_values, fill='tonexty', mode='none', fillcolor='rgba(0,100,80,0.2)', line=dict(width=0), name=f'Dispersión {i}'))
+    plt.plot(timestamps[0], mean_values[:len(timestamps[0])], label='Mean')
 
-    fig.update_xaxes(tickangle=45)
-    fig.show()
+
+    plt.fill_between(timestamps[0],mean_values - std_values, mean_values + std_values, alpha=0.2, label='Standard Deviation')
+    plt.title(folder,fontsize=20)
+    plt.xlabel('Integration time [ms]',fontsize=20)
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
+    plt.ylabel('DN',fontsize=20)
+    plt.legend(ncol=2,frameon=True,loc='upper right')
+    plt.grid()
+    plt.show()
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 # dead_pixel_all()
-#
+
 # compare_dead_pixels()
 
 
@@ -299,10 +318,14 @@ def variacion_coordenadas(path,folder, coords):
 # find_coordinates_with_value_gt_zero(matrix_file, output_file)
 
 #
+folders = [
+    'Darks/Temp2/',
+    'Rad/Temp1/Ltyp/Images/'
+]
 coords = './arrays/coordenadas_dead_pixels.csv'
 for i,folder in enumerate(folders):
     variacion_coordenadas(path,folders[i],coords)
-
+# #
 # variacion_coordenadas(path,folders[1],coords)
 
 # folders = [
