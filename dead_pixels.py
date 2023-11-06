@@ -11,6 +11,9 @@ import numpy as np
 import csv
 import plotly.express as px
 import plotly.graph_objects as go
+from tqdm import tqdm
+
+
 # --------------------------------------------------------------------------------------------------------------------
 def guardar_matrices_conteo(matrices_conteo, nombre_archivo):
     """
@@ -306,6 +309,104 @@ def variacion_coordenadas(path,folder, coords):
     plt.show()
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
+# Define una función para obtener los valores de los píxeles y sus vecinos
+def obtener_valores_y_vecinos(imagen, x, y):
+    # Valores de los píxeles en las coordenadas dadas y sus vecinos
+    valores = {
+        'center':   imagen[y, x],
+        'up':       imagen[y - 1, x],  # Píxel de arriba
+        'down':     imagen[y + 1, x],  # Píxel de abajo
+        'left':     imagen[y, x - 1],  # Píxel de la izquierda
+        'right':    imagen[y, x + 1],  # Píxel de la derecha
+        'upper_left': imagen[y - 1, x - 1],  # Esquina superior izquierda
+        'upper_right': imagen[y - 1, x + 1], # Esquina superior derecha
+        'lower_left': imagen[y + 1, x - 1],  # Esquina inferior izquierda
+        'lower_right': imagen[y + 1, x + 1]  # Esquina inferior derecha
+    }
+    # valores = [imagen[y, x]]
+    # vecinos = [
+    #     imagen[y - 1, x],  # Píxel de arriba
+    #     imagen[y + 1, x],  # Píxel de abajo
+    #     imagen[y, x - 1],  # Píxel de la izquierda
+    #     imagen[y, x + 1]  # Píxel de la derecha
+    # ]
+    # valores.extend(vecinos)
+    # valores[valor pixel,arriba,abajo,izq,derecha]
+    # print(valores)
+    return valores
+def var_pixels_adyac(folder):
+    path_file = path + folder + '*.mat'
+    files = sorted(glob.glob(path_file))
+    # Archivo de coordenadas
+    archivo_coord = './arrays/coordenadas_dead_pixels.csv'
+    # Leer las coordenadas desde el archivo
+    coordenadas = np.loadtxt(archivo_coord, delimiter=',', dtype=int)
+    for i, (y, x) in enumerate(coordenadas):
+        print('----------------------------')
+        print('Reading point {} of {}'.format(i,len(coordenadas)))
+        plt.figure(figsize=(8, 6))
+        plt.title(f'Variación de Píxeles en ({x}, {y}) y sus Vecinos ')
+        plt.xlabel('Tiempo')
+        plt.ylabel('Valor del Píxel')
+        values = {
+            'center':[],
+            'up': [],
+            'down': [],
+            'left': [],
+            'right': [],
+            'upper_left': [],
+            'upper_right': [],
+            'lower_left': [],
+            'lower_right': [],
+            'int_time': []
+        }
+        total_archivos = len(files)
+        for file in tqdm(range(1, total_archivos + 1), desc='Leyendo archivos de carpeta: '.format(folder)):
+            # print(file)
+        # for number,file in enumerate(files):
+            # print('Reding file: {} of {}'.format(number,len(files)), end='\r')
+            # data = mat73.loadmat(file)['salida']
+            data = mat73.loadmat(files[file-1])['salida']
+            int_time = data['tiemposInt']
+            df = np.mean(data['imagen'], axis=2)
+            valores = obtener_valores_y_vecinos(df, x, y)
+            for key in values.keys():
+                if key != 'int_time':
+                    values[key].append(valores[key])
+            values['int_time'].append(int_time)
+        for key in values.keys():
+            if key != 'int_time':
+                plt.plot(values['int_time'],values[key],label=key)
+
+        plt.legend(loc='upper right',fontsize=20,frameon=True)
+
+
+    # plt.show()
+
+def plot_only_one(file):
+    vmin = 60  # Valor mínimo personalizado
+    vmax = 500  # Valor máximo personalizado
+    cmap = plt.get_cmap('viridis')
+    fig, axs = plt.subplots()
+    df = np.mean(mat73.loadmat(file)['salida']['imagen'], axis=2)
+    im = axs.imshow(df, cmap=cmap, vmin=vmin, vmax=vmax)
+    axs.set_title('T_int = {} ms'.format(mat73.loadmat(file)['salida']['tiemposInt']))
+
+    archivo_coord = './arrays/coordenadas_dead_pixels.csv'
+    coordenadas = np.loadtxt(archivo_coord, delimiter=',', dtype=int)
+    for i, (y, x) in enumerate(coordenadas):
+        axs.plot(x, y, 'ro', markersize=2)
+        axs.annotate('{}'.format(i+1), (x, y), color='r', fontsize=25)
+
+    # axs.plot(x_coords, y_coords, 'ro', markersize=2)
+    # axs.annotate(f'Dead Pixels: {len(x_coords)}', xy=(1, 1), xycoords='axes fraction', xytext=(-10, -10),
+    #                        textcoords='offset points', color='r', fontsize=30, ha='right', va='top')
+    cax = fig.add_axes([0.91, 0.15, 0.02, 0.7])
+    cbar = plt.colorbar(im, cax=cax)
+    axs.set_title(file)
+    cbar.set_label('DN')
+    print('tiempo integrtacicon: ',mat73.loadmat(file)['salida']['tiemposInt'])
+    # plt.show()
 # ----------------------------------------------------------------------------------------------------------------------
 # dead_pixel_all()
 
@@ -323,11 +424,15 @@ folders = [
     'Rad/Temp1/Ltyp/Images/'
 ]
 coords = './arrays/coordenadas_dead_pixels.csv'
-for i,folder in enumerate(folders):
-    variacion_coordenadas(path,folders[i],coords)
+# for i,folder in enumerate(folders):
+#     variacion_coordenadas(path,folders[i],coords)
 # #
 # variacion_coordenadas(path,folders[1],coords)
 
+var_pixels_adyac(folders[0])
+file2 =path+'Darks/Temp2/dark_temp2_20230920105004.352.mat'
+plot_only_one(file2)
+plt.show()
 # folders = [
 #     'Darks/Temp1/',
 #     'Darks/Temp2/',
