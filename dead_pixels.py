@@ -13,8 +13,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 from tqdm import tqdm
 
-
 # --------------------------------------------------------------------------------------------------------------------
+# Utility Functions
 def guardar_matrices_conteo(matrices_conteo, nombre_archivo):
     """
     Guarda las matrices de conteo en un archivo .npy.
@@ -32,10 +32,8 @@ def cargar_matrices_conteo(nombre_archivo):
     """
     matrices_conteo = np.load(nombre_archivo)
     return matrices_conteo
-
-
 def encontrar_y_cortar_string(cadena):
-    # Encuentra la frase "Temp1" en la cadena
+    # Encuentra la frase "Temp" en la cadena
     indice_temp1 = cadena.find("Temp")
 
     if indice_temp1 != -1:
@@ -45,7 +43,6 @@ def encontrar_y_cortar_string(cadena):
         return cadena_cortada
     else:
         return None
-
 def contar_true_en_rectangulo(matriz, x1, x2, y1, y2):
     submatriz = matriz[y1:y2 + 1, x1:x2 + 1]
     return np.sum(submatriz)
@@ -56,7 +53,6 @@ def plot_rect_bands(x1,x2,y1,y2,band,color,ax):
     rect = patches.Rectangle((x1, y2), x2 - x1, y1 - y2, linewidth=1, edgecolor=color, facecolor='none')
     ax.add_patch(rect)
     ax.text(x1 - 60, (y1 + y2) / 2, band, color=color, fontsize=12)
-
 def dividir_lista_creciente(lista):
     segmentos = []
     segmento_actual = [lista[0]]
@@ -71,30 +67,22 @@ def dividir_lista_creciente(lista):
     segmentos.append(segmento_actual)
 
     return segmentos
-
 # --------------------------------------------------------------------------------------------------------------------
-
+# GENERAL PARAMETERS
 sns.light_palette("seagreen", as_cmap=True)
 plt.style.use(['science'])
 plt.rcParams['text.usetex'] = True
 
-# path = '/home/usuario/Documentos/MISION/CalVal/20230918_NirSwir_INVAP/' #path CONAE
-path = '/media/maxpower/Mauro/SABIA-mar/20230918_NirSwir_INVAP/' #path CASA
+path = '/home/usuario/Documentos/MISION/CalVal/20230918_NirSwir_INVAP/' #path CONAE
+# path = '/media/maxpower/Mauro/SABIA-mar/20230918_NirSwir_INVAP/' #path CASA
 
 # --------------------------------------------------------------------------------------------------------------------
-folders = [
-    'Darks/Temp1/',
-    'Darks/Temp2/',
-    'Rad/Temp1/Lcal/Images/',
-    'Rad/Temp1/Ltyp/Images/',
-    'Rad/Temp2/Lmax/Images/',
-    'Rad/Temp2/Ltyp/Images/'
-]
-folders = [
-    'Darks/Temp2/',
-]
+def  dead_pixel_all(folders):
+    """
 
-def  dead_pixel_all():
+    :param folders: lista con las carpetas donde se encuentran los archivos de imagenes deseadas
+    :return:
+    """
     for folder in folders:
         fig, ax = plt.subplots()
         path_file = path + folder + '*.mat'
@@ -149,9 +137,10 @@ def compare_dead_pixels():
     path_file = './arrays/*.npy'
     files = sorted(glob.glob(path_file))
     for file in files:
-        matriz = cargar_matrices_conteo(file)
-        matriz_booleana = matriz != 0
-        matrices.append(matriz_booleana)
+        if file != 'dead_pixels_mask.npy':
+            matriz = cargar_matrices_conteo(file)
+            matriz_booleana = matriz != 0
+            matrices.append(matriz_booleana)
     pixeles_muertos_comunes = np.all(matrices, axis=0)
     # pixeles_muertos_comunes = np.all(matrices)
 
@@ -408,9 +397,22 @@ def plot_only_one(file):
     print('tiempo integrtacicon: ',mat73.loadmat(file)['salida']['tiemposInt'])
     # plt.show()
 # ----------------------------------------------------------------------------------------------------------------------
-# dead_pixel_all()
+# SOURCE CODE
+folders = [
+    'Darks/Temp1/',
+    'Darks/Temp2/',
+    'Rad/Temp1/Lcal/Images/',
+    'Rad/Temp1/Ltyp/Images/',
+    'Rad/Temp2/Lmax/Images/',
+    'Rad/Temp2/Ltyp/Images/'
+]
+# folders = [
+#     'Darks/Temp2/',
+# ]
 
-# compare_dead_pixels()
+# dead_pixel_all(folders)
+
+compare_dead_pixels()
 
 
 
@@ -419,63 +421,63 @@ def plot_only_one(file):
 # find_coordinates_with_value_gt_zero(matrix_file, output_file)
 
 #
-folders = [
-    'Darks/Temp2/',
-    'Rad/Temp1/Ltyp/Images/'
-]
-coords = './arrays/coordenadas_dead_pixels.csv'
-# for i,folder in enumerate(folders):
-#     variacion_coordenadas(path,folders[i],coords)
-# #
-# variacion_coordenadas(path,folders[1],coords)
-
-var_pixels_adyac(folders[0])
-file2 =path+'Darks/Temp2/dark_temp2_20230920105004.352.mat'
-plot_only_one(file2)
-plt.show()
 # folders = [
-#     'Darks/Temp1/',
 #     'Darks/Temp2/',
-#     'Rad/Temp1/Lcal/Images/',
-#     'Rad/Temp1/Ltyp/Images/',
-#     'Rad/Temp2/Lmax/Images/',
-#     'Rad/Temp2/Ltyp/Images/'
+#     'Rad/Temp1/Ltyp/Images/'
 # ]
-# path_file = '/home/usuario/Documentos/MISION/CalVal/arrays/*.npy'
-# files = sorted(glob.glob(path_file))
-# print(files)
-# for i,file in enumerate(files):
-#     fig, ax = plt.subplots()
-#     matriz = cargar_matrices_conteo(file)
-#     # Calcula el umbral como el 90% del total de imágenes
-#     umbral = 1 * len(sorted(glob.glob(path+folders[i]+'*.mat')))
+# coords = './arrays/coordenadas_dead_pixels.csv'
+# # for i,folder in enumerate(folders):
+# #     variacion_coordenadas(path,folders[i],coords)
+# # #
+# # variacion_coordenadas(path,folders[1],coords)
 #
-#     # Encuentra las coordenadas de píxeles con conteo alto
-#     coordenadas_puntos_altos = np.argwhere(matriz >= umbral)
-#     conteo = 0
-#     for coord in coordenadas_puntos_altos:
-#         conteo += 1
-#         y, x = coord
-#         ax.plot(x, y, 'ro', markersize=5)
-#
-#         # Calcula el porcentaje
-#         porcentaje = (matriz[y, x] / len(sorted(glob.glob(path+folders[i]+'*.mat')))) * 100
-#
-#         # Dibuja el círculo alrededor del píxel
-#         circle = plt.Circle((x, y), 5, color='red', fill=False, lw=1)
-#         plt.gca().add_patch(circle)
-#
-#         # Etiqueta el píxel con el porcentaje
-#         # plt.annotate(f'{porcentaje:.2f}%', (x, y), color='r', fontsize=10, ha='center', va='bottom')
-#         ax.annotate(f'{porcentaje:.2f}%', (x + 7, y + 7), color='r', fontsize=10, ha='center', va='bottom')
-#
-#     im = ax.imshow(matriz, cmap='hot', interpolation='nearest')
-#     ax.text(0.9, 0.9, f'Dead Pixels: {conteo}\n {np.round(porcentaje, 3)} percent of Total', color='red',
-#             transform=ax.transAxes, fontsize=25,
-#             horizontalalignment='right', verticalalignment='top')
-#     ax.set_title("Dead Pixels - File: {}".format(file))
-#     ax.axis('off')
-#     plt.colorbar(im)
+# var_pixels_adyac(folders[0])
+# file2 =path+'Darks/Temp2/dark_temp2_20230920105004.352.mat'
+# plot_only_one(file2)
 # plt.show()
+# # folders = [
+# #     'Darks/Temp1/',
+# #     'Darks/Temp2/',
+# #     'Rad/Temp1/Lcal/Images/',
+# #     'Rad/Temp1/Ltyp/Images/',
+# #     'Rad/Temp2/Lmax/Images/',
+# #     'Rad/Temp2/Ltyp/Images/'
+# # ]
+# # path_file = '/home/usuario/Documentos/MISION/CalVal/arrays/*.npy'
+# # files = sorted(glob.glob(path_file))
+# # print(files)
+# # for i,file in enumerate(files):
+# #     fig, ax = plt.subplots()
+# #     matriz = cargar_matrices_conteo(file)
+# #     # Calcula el umbral como el 90% del total de imágenes
+# #     umbral = 1 * len(sorted(glob.glob(path+folders[i]+'*.mat')))
 # #
+# #     # Encuentra las coordenadas de píxeles con conteo alto
+# #     coordenadas_puntos_altos = np.argwhere(matriz >= umbral)
+# #     conteo = 0
+# #     for coord in coordenadas_puntos_altos:
+# #         conteo += 1
+# #         y, x = coord
+# #         ax.plot(x, y, 'ro', markersize=5)
 # #
+# #         # Calcula el porcentaje
+# #         porcentaje = (matriz[y, x] / len(sorted(glob.glob(path+folders[i]+'*.mat')))) * 100
+# #
+# #         # Dibuja el círculo alrededor del píxel
+# #         circle = plt.Circle((x, y), 5, color='red', fill=False, lw=1)
+# #         plt.gca().add_patch(circle)
+# #
+# #         # Etiqueta el píxel con el porcentaje
+# #         # plt.annotate(f'{porcentaje:.2f}%', (x, y), color='r', fontsize=10, ha='center', va='bottom')
+# #         ax.annotate(f'{porcentaje:.2f}%', (x + 7, y + 7), color='r', fontsize=10, ha='center', va='bottom')
+# #
+# #     im = ax.imshow(matriz, cmap='hot', interpolation='nearest')
+# #     ax.text(0.9, 0.9, f'Dead Pixels: {conteo}\n {np.round(porcentaje, 3)} percent of Total', color='red',
+# #             transform=ax.transAxes, fontsize=25,
+# #             horizontalalignment='right', verticalalignment='top')
+# #     ax.set_title("Dead Pixels - File: {}".format(file))
+# #     ax.axis('off')
+# #     plt.colorbar(im)
+# # plt.show()
+# # #
+# # #
