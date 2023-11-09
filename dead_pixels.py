@@ -67,21 +67,37 @@ def dividir_lista_creciente(lista):
     segmentos.append(segmento_actual)
 
     return segmentos
+def obtener_valores_y_vecinos(imagen, x, y):
+    # Valores de los píxeles en las coordenadas dadas y sus vecinos
+    valores = {
+        'center':   imagen[y, x],
+        'up':       imagen[y - 1, x],  # Píxel de arriba
+        'down':     imagen[y + 1, x],  # Píxel de abajo
+        'left':     imagen[y, x - 1],  # Píxel de la izquierda
+        'right':    imagen[y, x + 1],  # Píxel de la derecha
+        'upper_left': imagen[y - 1, x - 1],  # Esquina superior izquierda
+        'upper_right': imagen[y - 1, x + 1], # Esquina superior derecha
+        'lower_left': imagen[y + 1, x - 1],  # Esquina inferior izquierda
+        'lower_right': imagen[y + 1, x + 1]  # Esquina inferior derecha
+    }
+    return valores
 # --------------------------------------------------------------------------------------------------------------------
 # GENERAL PARAMETERS
 sns.light_palette("seagreen", as_cmap=True)
 plt.style.use(['science'])
 plt.rcParams['text.usetex'] = True
-
-path = '/home/usuario/Documentos/MISION/CalVal/20230918_NirSwir_INVAP/' #path CONAE
-# path = '/media/maxpower/Mauro/SABIA-mar/20230918_NirSwir_INVAP/' #path CASA
-
 # --------------------------------------------------------------------------------------------------------------------
 def  dead_pixel_all(folders):
     """
+    Función que analiza imágenes para identificar píxeles defectuosos.
+    Calcula matrices de recuento basadas en un umbral (THRESHOLD), contando la cantidad de píxeles que tienen valores
+    por debajo de este umbral para cada tiempo de integración en las subcarpetas proporcionadas. Guarda las matrices
+    obtenidas en la subcarpeta "./arrays/" con extension ".npy".
+    Posteriormente, genera gráficos que destacan los píxeles que cumplen con esta condición.
 
-    :param folders: lista con las carpetas donde se encuentran los archivos de imagenes deseadas
-    :return:
+    :param folders: Lista de carpetas que contienen los archivos de imágenes a analizar.
+    :return: No devuelve ningún valor, pero genera y muestra
+    gráficos que proporcionan información sobre los píxeles defectuosos.
     """
     for folder in folders:
         fig, ax = plt.subplots()
@@ -89,14 +105,15 @@ def  dead_pixel_all(folders):
         files = sorted(glob.glob(path_file))
         df = np.mean(mat73.loadmat(files[0])['salida']['imagen'], axis=2)
         alto, ancho = df.shape
+        THRESHOLD = 22 #umbral de deteccion de pixel "malo"
         matriz_de_recuento = np.zeros((alto, ancho), dtype=int)
         for file in files:
             df = np.mean(mat73.loadmat(file)['salida']['imagen'], axis=2)
-            pixeles_menores_a_25 = (df <= 22)
+            pixeles_menores_a_25 = (df <= THRESHOLD)
             matriz_de_recuento += pixeles_menores_a_25
 
         # Calcula el umbral como el 90% del total de imágenes
-        umbral = 1 * len(files)
+        umbral = 0.1 * len(files)
 
         # Encuentra las coordenadas de píxeles con conteo alto
         coordenadas_puntos_altos = np.argwhere(matriz_de_recuento >= umbral)
@@ -133,6 +150,13 @@ def  dead_pixel_all(folders):
     plt.show()
 
 def compare_dead_pixels():
+    """
+    Función que compara y visualiza píxeles muertos comunes en varias matrices de recuento.
+    Carga matrices de recuento creadas por la funcion "dead_pixels" desde archivos '.npy' en la carpeta './arrays'.
+    Luego, encuentra píxeles muertos comunes entre las matrices y genera un gráfico que destaca estos píxeles comunes.
+
+    :return: No devuelve ningún valor, pero genera y muestra un gráfico que resalta los píxeles muertos comunes.
+    """
     matrices = []
     path_file = './arrays/*.npy'
     files = sorted(glob.glob(path_file))
@@ -200,6 +224,15 @@ def compare_dead_pixels():
     plt.show()
 
 def find_coordinates_with_value_gt_zero(matrix_file, output_file):
+    """
+    Función que encuentra las coordenadas donde los valores de una matriz son mayores a cero.
+    Carga la matriz desde un archivo '.npy' especificado en 'matrix_file', identifica las coordenadas con
+    valores mayores a cero y guarda estas coordenadas en un archivo de salida especificado en 'output_file'.
+
+    :param matrix_file: Ruta del archivo '.npy' que contiene la matriz.
+    :param output_file: Ruta del archivo de salida para guardar las coordenadas.
+    :return: No devuelve ningún valor, pero guarda las coordenadas en un archivo de salida.
+    """
     try:
         # Carga la matriz desde el archivo .npy
         matrix = np.load(matrix_file)
@@ -214,6 +247,19 @@ def find_coordinates_with_value_gt_zero(matrix_file, output_file):
     except Exception as e:
         print(f"Error: {e}")
 def variacion_coordenadas(path,folder, coords):
+    """
+    Función que analiza la variación de los valores de píxeles en el tiempo.
+    Carga las coordenadas desde un archivo CSV especificado en 'coords' y los datos de imágenes desde archivos '.mat'
+    en la carpeta proporcionada. Luego, realiza cálculos estadísticos sobre regiones específicas de las imágenes (media
+    y desvio en regiones donde se observa un comportamiento normal de los pixels) y muestra la evolución temporal de
+    los valores de los píxeles seleccionados en "coords", junto con la media y la desviación estándar.
+
+    :param path: Ruta de la carpeta donde se encuentran los archivos de imágenes '.mat'.
+    :param folder: Nombre de la subcarpeta dentro de 'path' que se está analizando.
+    :param coords: Ruta del archivo CSV que contiene las coordenadas de los píxeles a analizar.
+    :return: No devuelve ningún valor, pero muestra un gráfico que ilustra la evolución temporal de los valores
+    de píxeles, la media y la desviación estándar.
+    """
     coordinates = []
     with open(coords, 'r') as csv_file:
         csv_reader = csv.reader(csv_file)
@@ -296,34 +342,16 @@ def variacion_coordenadas(path,folder, coords):
     plt.legend(ncol=2,frameon=True,loc='upper right')
     plt.grid()
     plt.show()
-# ----------------------------------------------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------------------------------------------
-# Define una función para obtener los valores de los píxeles y sus vecinos
-def obtener_valores_y_vecinos(imagen, x, y):
-    # Valores de los píxeles en las coordenadas dadas y sus vecinos
-    valores = {
-        'center':   imagen[y, x],
-        'up':       imagen[y - 1, x],  # Píxel de arriba
-        'down':     imagen[y + 1, x],  # Píxel de abajo
-        'left':     imagen[y, x - 1],  # Píxel de la izquierda
-        'right':    imagen[y, x + 1],  # Píxel de la derecha
-        'upper_left': imagen[y - 1, x - 1],  # Esquina superior izquierda
-        'upper_right': imagen[y - 1, x + 1], # Esquina superior derecha
-        'lower_left': imagen[y + 1, x - 1],  # Esquina inferior izquierda
-        'lower_right': imagen[y + 1, x + 1]  # Esquina inferior derecha
-    }
-    # valores = [imagen[y, x]]
-    # vecinos = [
-    #     imagen[y - 1, x],  # Píxel de arriba
-    #     imagen[y + 1, x],  # Píxel de abajo
-    #     imagen[y, x - 1],  # Píxel de la izquierda
-    #     imagen[y, x + 1]  # Píxel de la derecha
-    # ]
-    # valores.extend(vecinos)
-    # valores[valor pixel,arriba,abajo,izq,derecha]
-    # print(valores)
-    return valores
+
 def var_pixels_adyac(folder):
+    """
+    Función que analiza la variación de los valores de píxeles en una posición específica y sus vecinos a lo largo
+    del tiempo. Lee archivos de imágenes '.mat' en la carpeta proporcionada y muestra un gráfico que ilustra la
+    evolución temporal de los valores de píxeles en la posición central y sus vecinos.
+
+    :param folder: Nombre de la subcarpeta que contiene los archivos de imágenes '.mat' a analizar.
+    :return: No devuelve ningún valor, pero muestra un gráfico que representa la variación temporal de los valores de píxeles en una posición específica y sus vecinos.
+    """
     path_file = path + folder + '*.mat'
     files = sorted(glob.glob(path_file))
     # Archivo de coordenadas
@@ -334,9 +362,9 @@ def var_pixels_adyac(folder):
         print('----------------------------')
         print('Reading point {} of {}'.format(i,len(coordenadas)))
         plt.figure(figsize=(8, 6))
-        plt.title(f'Variación de Píxeles en ({x}, {y}) y sus Vecinos ')
-        plt.xlabel('Tiempo')
-        plt.ylabel('Valor del Píxel')
+        plt.title('Pixel: {}'.format(i))
+        plt.xlabel('Integration time [ms]',fontsize=20)
+        plt.ylabel('DN',fontsize=20)
         values = {
             'center':[],
             'up': [],
@@ -369,10 +397,17 @@ def var_pixels_adyac(folder):
 
         plt.legend(loc='upper right',fontsize=20,frameon=True)
 
-
-    # plt.show()
+    plt.show()
 
 def plot_only_one(file):
+    """
+    Función que genera un gráfico para visualizar la imagen promedio y la ubicación de píxeles muertos en una
+    sola imagen. Carga la imagen desde un archivo '.mat' especificado en 'file', y superpone los píxeles muertos
+    utilizando las coordenadas del archivo 'coordenadas_dead_pixels.csv'.
+
+    :param file: Ruta del archivo '.mat' que contiene la imagen a visualizar.
+    :return: No devuelve ningún valor, pero muestra un gráfico que representa la imagen promedio y la ubicación de píxeles muertos.
+    """
     vmin = 60  # Valor mínimo personalizado
     vmax = 500  # Valor máximo personalizado
     cmap = plt.get_cmap('viridis')
@@ -398,6 +433,10 @@ def plot_only_one(file):
     # plt.show()
 # ----------------------------------------------------------------------------------------------------------------------
 # SOURCE CODE
+
+# path = '/home/usuario/Documentos/MISION/CalVal/20230918_NirSwir_INVAP/' #path CONAE
+path = '/media/maxpower/Mauro/SABIA-mar/20230918_NirSwir_INVAP/' #path CASA
+
 folders = [
     'Darks/Temp1/',
     'Darks/Temp2/',
@@ -406,13 +445,14 @@ folders = [
     'Rad/Temp2/Lmax/Images/',
     'Rad/Temp2/Ltyp/Images/'
 ]
+
 # folders = [
 #     'Darks/Temp2/',
 # ]
 
 # dead_pixel_all(folders)
 
-compare_dead_pixels()
+# compare_dead_pixels()
 
 
 
@@ -426,12 +466,12 @@ compare_dead_pixels()
 #     'Rad/Temp1/Ltyp/Images/'
 # ]
 # coords = './arrays/coordenadas_dead_pixels.csv'
-# # for i,folder in enumerate(folders):
-# #     variacion_coordenadas(path,folders[i],coords)
+# for i,folder in enumerate(folders):
+#     variacion_coordenadas(path,folders[i],coords)
 # # #
 # # variacion_coordenadas(path,folders[1],coords)
 #
-# var_pixels_adyac(folders[0])
+var_pixels_adyac(folders[0])
 # file2 =path+'Darks/Temp2/dark_temp2_20230920105004.352.mat'
 # plot_only_one(file2)
 # plt.show()
