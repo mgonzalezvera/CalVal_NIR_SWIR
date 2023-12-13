@@ -397,7 +397,7 @@ def var_pixels_adyac(folder):
 
         plt.legend(loc='upper right',fontsize=20,frameon=True)
 
-    plt.show()
+    # plt.show()
 
 def plot_only_one(file):
     """
@@ -472,9 +472,9 @@ folders = [
 # # variacion_coordenadas(path,folders[1],coords)
 #
 var_pixels_adyac(folders[0])
-# file2 =path+'Darks/Temp2/dark_temp2_20230920105004.352.mat'
-# plot_only_one(file2)
-# plt.show()
+file2 =path+'Darks/Temp2/dark_temp2_20230920105004.352.mat'
+plot_only_one(file2)
+plt.show()
 # # folders = [
 # #     'Darks/Temp1/',
 # #     'Darks/Temp2/',

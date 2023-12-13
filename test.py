@@ -148,3 +148,60 @@ def compare_dead_pixels():
     plt.show()
 
 compare_dead_pixels()
+
+def plot_only_one(file):
+    """
+    Función que genera un gráfico para visualizar la imagen promedio y la ubicación de píxeles muertos en una
+    sola imagen. Carga la imagen desde un archivo '.mat' especificado en 'file', y superpone los píxeles muertos
+    utilizando las coordenadas del archivo 'coordenadas_dead_pixels.csv'.
+
+    :param file: Ruta del archivo '.mat' que contiene la imagen a visualizar.
+    :return: No devuelve ningún valor, pero muestra un gráfico que representa la imagen promedio y la ubicación de píxeles muertos.
+    """
+    vmin = 60  # Valor mínimo personalizado
+    vmax = 500  # Valor máximo personalizado
+    cmap = plt.get_cmap('viridis')
+    fig, axs = plt.subplots()
+    df = np.mean(mat73.loadmat(file)['salida']['imagen'], axis=2)
+    im = axs.imshow(df, cmap=cmap, vmin=vmin, vmax=vmax)
+    axs.set_title('T_int = {} ms'.format(mat73.loadmat(file)['salida']['tiemposInt']))
+
+    archivo_coord = './arrays/coordenadas_dead_pixels.csv'
+    coordenadas = np.loadtxt(archivo_coord, delimiter=',', dtype=int)
+    for i, (y, x) in enumerate(coordenadas):
+        axs.plot(x, y, 'ro', markersize=2)
+        axs.annotate('{}'.format(i+1), (x, y), color='r', fontsize=1)
+        # Rectangulos
+    bandas = {
+        'B12': {'y1': 412, 'y2': 422, 'color': 'r'},
+        'B10': {'y1': 451, 'y2': 459, 'color': 'b'},
+        'B9': {'y1': 489, 'y2': 497, 'color': 'g'},
+        'B11': {'y1': 526, 'y2': 535, 'color': 'y'},
+        'B13': {'y1': 564, 'y2': 573, 'color': 'orange'},
+        'B14': {'y1': 602, 'y2': 612, 'color': 'm'},
+    }
+    xlims = {'x1': 158, 'x2': 1122}
+    for key in bandas.keys():
+        plot_rect_bands(xlims['x1'] - 1, xlims['x2'] - 1, bandas[key]['y1'] - 1, bandas[key]['y2'] - 1, key,
+                        bandas[key]['color'], axs)
+
+    # Recorre los rectángulos y cuenta los valores True dentro de cada uno
+    for key, rectangulo in bandas.items():
+        x1, x2, y1, y2 = xlims['x1'] - 1, xlims['x2'] - 1, rectangulo['y1'] - 1, rectangulo['y2'] - 1
+
+        # Dibuja el rectángulo en el gráfico
+        rect = plt.Rectangle((x1, y1), x2 - x1, y2 - y1, edgecolor=rectangulo['color'], facecolor='none')
+        axs.add_patch(rect)
+
+    # axs.plot(x_coords, y_coords, 'ro', markersize=2)
+    # axs.annotate(f'Dead Pixels: {len(x_coords)}', xy=(1, 1), xycoords='axes fraction', xytext=(-10, -10),
+    #                        textcoords='offset points', color='r', fontsize=30, ha='right', va='top')
+    cax = fig.add_axes([0.91, 0.15, 0.02, 0.7])
+    cbar = plt.colorbar(im, cax=cax)
+    axs.set_title(file)
+    cbar.set_label('DN')
+    print('tiempo integrtacicon: ',mat73.loadmat(file)['salida']['tiemposInt'])
+    plt.show()
+
+file2 =path+'Darks/Temp2/dark_temp2_20230920105004.352.mat'
+plot_only_one(file2)
